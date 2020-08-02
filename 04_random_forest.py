@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_validate
 
 
 def fit_tree_stump_forest(X_train: np.ndarray, y_train: np.ndarray, n_estimators: int) -> RandomForestClassifier:
@@ -63,4 +64,24 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # for reproducibility
+    np.random.seed(42)
+
+    # load data
+    X_data = np.loadtxt(open('./Data/FileName_Fz_raw.csv', 'r'), delimiter=",", skiprows=0)
+    y_data = np.loadtxt(open('./Data/FileName_Speed.csv', 'r'), delimiter=",", skiprows=0)
+
+    # down sample the data
+    X_sample = X_data[:, ::100]
+
+    # split training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X_sample, y_data, test_size=0.2)
+
+    for i in range(1, 11):
+        clf = RandomForestClassifier(n_estimators=i)
+        clf = clf.fit(X_train, y_train)
+
+        results = cross_validate(clf, X_test, y_test, cv=10)
+
+        acc = results["test_score"].mean()
+        print(f"Ensemblegroesse :{i}, Testgenauigkeit:{acc}")
